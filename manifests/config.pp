@@ -61,10 +61,19 @@ class prometheus::config(
         }
       }
       'systemd' : {
-        include 'systemd'
-        ::systemd::unit_file {'prometheus.service':
+        file { '/etc/systemd/system/prometheus.service':
+          mode    => '0644',
+          owner   => 'root',
+          group   => 'root',
+          notify  => $systemd_notify,
           content => template('prometheus/prometheus.systemd.erb'),
         }
+        exec { 'prometheus-systemd-reload':
+          command     => 'systemctl daemon-reload',
+          path        => [ '/usr/bin', '/bin', '/usr/sbin' ],
+          refreshonly => true,
+        }
+
       }
       'sysv' : {
         file { '/etc/init.d/prometheus':

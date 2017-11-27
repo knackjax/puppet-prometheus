@@ -168,10 +168,18 @@ define prometheus::daemon (
         }
       }
       'systemd' : {
-        include 'systemd'
-        ::systemd::unit_file {"${name}.service":
+        file { "/etc/systemd/system/${name}.service":
+          mode    => '0644',
+          owner   => 'root',
+          group   => 'root',
           content => template('prometheus/daemon.systemd.erb'),
           notify  => $notify_service,
+        }
+        ~> exec { "${name}-systemd-reload":
+          command     => 'systemctl daemon-reload',
+          path        => [ '/usr/bin', '/bin', '/usr/sbin' ],
+          refreshonly => true,
+          notify      => $notify_service,
         }
       }
       'sysv' : {
